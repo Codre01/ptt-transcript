@@ -21,8 +21,9 @@ import { AudioService } from '@/services/audio';
 import { useVoiceStore } from '@/store/voice-store';
 import { logger } from '@/utils/logger';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
 import * as Linking from 'expo-linking';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Modal,
   Platform,
@@ -48,6 +49,8 @@ export default function HomeScreen() {
     setScenario,
   } = useVoiceStore();
 
+  const soundRef = useRef<Audio.Sound | null>(null);
+
   // Initialize audio service and cleanup on mount
   useEffect(() => {
     logger.info('Home screen mounted');
@@ -59,8 +62,49 @@ export default function HomeScreen() {
     
     return () => {
       logger.debug('Home screen unmounting');
+      // Cleanup sound on unmount
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
     };
   }, []);
+
+  // Play clarification audio when entering clarification state
+  useEffect(() => {
+    const playAudio = async () => {
+      if (state.status === 'clarification') {
+        try {
+          // Unload previous sound if exists
+          if (soundRef.current) {
+            await soundRef.current.unloadAsync();
+          }
+
+          // Load and play audio
+          const { sound } = await Audio.Sound.createAsync(
+            require('@/assets/audios/audiofile1.mp3')
+          );
+          soundRef.current = sound;
+          await sound.playAsync();
+          logger.info('Playing clarification audio');
+        } catch (error) {
+          logger.error('Error playing clarification audio', error);
+        }
+      } else {
+        // Stop and unload sound when leaving clarification state
+        if (soundRef.current) {
+          try {
+            await soundRef.current.stopAsync();
+            await soundRef.current.unloadAsync();
+            soundRef.current = null;
+          } catch (error) {
+            logger.error('Error stopping audio', error);
+          }
+        }
+      }
+    };
+
+    playAudio();
+  }, [state.status]);
 
   // Determine PTT button state
   const getPTTButtonState = (): 'idle' | 'listening' | 'processing' => {
@@ -136,6 +180,7 @@ export default function HomeScreen() {
       <CaptureOverlay
         visible={state.status === 'listening'}
         duration={state.status === 'listening' ? state.duration : 0}
+        onStop={stopRecording}
         onCancel={cancelRecording}
       />
 

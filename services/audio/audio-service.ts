@@ -6,7 +6,7 @@ import type { AudioRecording, PermissionState } from './types';
 class AudioServiceImpl {
     private recording: Audio.Recording | null = null;
     private recordingDuration: number = 0;
-    private durationInterval: NodeJS.Timeout | null = null;
+    private durationInterval: ReturnType<typeof setInterval> | null = null;
     private recordingsDir: Directory;
 
     constructor() {

@@ -1,6 +1,8 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Audio } from 'expo-av';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
@@ -8,13 +10,24 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 
 import { ErrorBoundary } from '@/components/error-boundary';
+import { Fonts } from '@/constants/fonts';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AudioService } from '@/services/audio';
 import { logger } from '@/utils/logger';
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const appState = useRef(AppState.currentState);
+  
+  const [fontsLoaded] = useFonts(Fonts);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
 
   useEffect(() => {
     // Initialize app on mount
@@ -93,6 +106,10 @@ export default function RootLayout() {
     };
   }, []);
 
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
@@ -101,7 +118,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
-          <StatusBar style="auto" />
+          <StatusBar style="light" backgroundColor="#8E8E93" />
         </ThemeProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

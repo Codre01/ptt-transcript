@@ -1,0 +1,16 @@
+export const Fonts = {
+  'Nunito-Regular': require('../assets/fonts/nunito/Nunito-Regular.ttf'),
+  'Nunito-Italic': require('../assets/fonts/nunito/Nunito-Italic.ttf'),
+  'Nunito-Light': require('../assets/fonts/nunito/Nunito-Light.ttf'),
+  'Nunito-LightItalic': require('../assets/fonts/nunito/Nunito-LightItalic.ttf'),
+  'Nunito-Medium': require('../assets/fonts/nunito/Nunito-Medium.ttf'),
+  'Nunito-MediumItalic': require('../assets/fonts/nunito/Nunito-MediumItalic.ttf'),
+  'Nunito-SemiBold': require('../assets/fonts/nunito/Nunito-SemiBold.ttf'),
+  'Nunito-SemiBoldItalic': require('../assets/fonts/nunito/Nunito-SemiBoldItalic.ttf'),
+  'Nunito-Bold': require('../assets/fonts/nunito/Nunito-Bold.ttf'),
+  'Nunito-BoldItalic': require('../assets/fonts/nunito/Nunito-BoldItalic.ttf'),
+  'Nunito-ExtraBold': require('../assets/fonts/nunito/Nunito-ExtraBold.ttf'),
+  'Nunito-ExtraBoldItalic': require('../assets/fonts/nunito/Nunito-ExtraBoldItalic.ttf'),
+  'Nunito-Black': require('../assets/fonts/nunito/Nunito-Black.ttf'),
+  'Nunito-BlackItalic': require('../assets/fonts/nunito/Nunito-BlackItalic.ttf'),
+};

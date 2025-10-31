@@ -163,6 +163,25 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
     const startTime = Date.now();
     logger.userAction('Stop recording button released');
     
+    // Check if actually recording
+    const currentState = get().state;
+    if (currentState.status !== 'listening') {
+      logger.warn('Stop recording called but not in listening state', { status: currentState.status });
+      return;
+    }
+
+    // Check if AudioService has an active recording
+    if (!AudioService.isRecording()) {
+      logger.warn('Stop recording called but AudioService has no active recording');
+      // Clear duration interval if running
+      if (durationInterval) {
+        clearInterval(durationInterval);
+        durationInterval = null;
+      }
+      set({ state: { status: 'idle' } });
+      return;
+    }
+    
     try {
       // Clear duration interval
       if (durationInterval) {

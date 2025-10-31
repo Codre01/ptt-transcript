@@ -8,7 +8,8 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = __DEV__;
+    this.isDevelopment = false;
+    // this.isDevelopment = __DEV__;
   }
 
   private formatMessage(
@@ -66,8 +67,9 @@ class Logger {
     } else if (error) {
       errorContext.error = error;
     }
-    
-    console.error(this.formatMessage('error', message, errorContext));
+    if( this.isDevelopment ) {
+      console.error(this.formatMessage('error', message, errorContext));
+    }
   }
 
   /**

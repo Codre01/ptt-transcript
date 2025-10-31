@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
     lineHeight: 20,
+    fontFamily: 'Nunito-Medium',
   },
   dismissButton: {
     width: 28,

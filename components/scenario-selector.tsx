@@ -12,8 +12,8 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ApiScenario } from '../services/voice-api/types';
 
 const STORAGE_KEY = '@ptt_scenario_selection';
@@ -23,15 +23,16 @@ export interface ScenarioSelectorProps {
   onScenarioChange: (scenario: ApiScenario) => void;
 }
 
-const SCENARIOS: Array<{ value: ApiScenario; label: string }> = [
-  { value: 'success', label: 'Success' },
-  { value: 'clarification', label: 'Clarification' },
-  { value: 'networkError', label: 'Network Error' },
-  { value: 'serverError', label: 'Server Error' },
+const SCENARIOS: { value: ApiScenario; label: string; icon: string; color: string }[] = [
+  { value: 'success', label: 'Success', icon: '✓', color: '#34C759' },
+  { value: 'clarification', label: 'Clarify', icon: '?', color: '#FF9500' },
+  { value: 'networkError', label: 'Network', icon: '⚠', color: '#FF3B30' },
+  { value: 'serverError', label: 'Server', icon: '✕', color: '#AF52DE' },
 ];
 
 export function ScenarioSelector({ currentScenario, onScenarioChange }: ScenarioSelectorProps) {
-  // Load persisted scenario on mount
+  const [scaleAnims] = useState(() => SCENARIOS.map(() => new Animated.Value(1)));
+
   useEffect(() => {
     loadPersistedScenario();
   }, []);
@@ -53,48 +54,68 @@ export function ScenarioSelector({ currentScenario, onScenarioChange }: Scenario
     return SCENARIOS.some((s) => s.value === value);
   };
 
-  // Handle scenario selection
-  const handleScenarioPress = async (scenario: ApiScenario) => {
+  const handleScenarioPress = async (scenario: ApiScenario, index: number) => {
+    Animated.sequence([
+      Animated.timing(scaleAnims[index], {
+        toValue: 0.92,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnims[index], {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     try {
-      // Persist to AsyncStorage
       await AsyncStorage.setItem(STORAGE_KEY, scenario);
-      // Update state
       onScenarioChange(scenario);
     } catch (error) {
       console.error('Error persisting scenario:', error);
-      // Still update state even if persistence fails
       onScenarioChange(scenario);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Test Scenario:</Text>
-      <View style={styles.segmentedControl}>
-        {SCENARIOS.map((scenario) => {
+      <View style={styles.header}>
+        <Text style={styles.label}>🧪 Test Scenario</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>DEV</Text>
+        </View>
+      </View>
+      <View style={styles.grid}>
+        {SCENARIOS.map((scenario, index) => {
           const isSelected = currentScenario === scenario.value;
           return (
-            <Pressable
+            <Animated.View
               key={scenario.value}
-              onPress={() => handleScenarioPress(scenario.value)}
-              style={({ pressed }) => [
-                styles.segment,
-                isSelected && styles.segmentSelected,
-                pressed && styles.segmentPressed,
-              ]}
-              accessibilityLabel={`${scenario.label} scenario`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
+              style={[styles.cardWrapper, { transform: [{ scale: scaleAnims[index] }] }]}
             >
-              <Text
+              <Pressable
+                onPress={() => handleScenarioPress(scenario.value, index)}
                 style={[
-                  styles.segmentText,
-                  isSelected && styles.segmentTextSelected,
+                  styles.card,
+                  isSelected && [styles.cardSelected, { borderColor: scenario.color }],
                 ]}
+                accessibilityLabel={`${scenario.label} scenario`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
               >
-                {scenario.label}
-              </Text>
-            </Pressable>
+                <View style={[styles.iconContainer, { backgroundColor: scenario.color + '15' }]}>
+                  <Text style={[styles.icon, { color: scenario.color }]}>{scenario.icon}</Text>
+                </View>
+                <Text style={[styles.cardText, isSelected && { color: scenario.color }]}>
+                  {scenario.label}
+                </Text>
+                {isSelected && (
+                  <View style={[styles.checkmark, { backgroundColor: scenario.color }]}>
+                    <Text style={styles.checkmarkText}>✓</Text>
+                  </View>
+                )}
+              </Pressable>
+            </Animated.View>
           );
         })}
       </View>
@@ -105,54 +126,94 @@ export function ScenarioSelector({ currentScenario, onScenarioChange }: Scenario
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#F2F2F7', // iOS light gray background
+    paddingTop: 16,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3C3C43',
-    marginBottom: 8,
-    textTransform: 'uppercase',
+    fontSize: 15,
+    color: '#1C1C1E',
+    letterSpacing: -0.3,
+    fontFamily: 'Nunito-Bold',
+  },
+  badge: {
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 10,
+    color: '#8E8E93',
     letterSpacing: 0.5,
+    fontFamily: 'Nunito-Bold',
   },
-  segmentedControl: {
+  grid: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    gap: 8,
   },
-  segment: {
+  cardWrapper: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+  },
+  card: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minHeight: 88,
+    justifyContent: 'center',
+  },
+  cardSelected: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
-    minHeight: 44, // Minimum touch target size
+    marginBottom: 6,
   },
-  segmentSelected: {
-    backgroundColor: '#007AFF', // iOS blue
+  icon: {
+    fontSize: 18,
+    fontWeight: '700',
   },
-  segmentPressed: {
-    opacity: 0.7,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '500',
+  cardText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#3C3C43',
     textAlign: 'center',
+    fontFamily: 'Nunito-SemiBold',
   },
-  segmentTextSelected: {
+  checkmark: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmarkText: {
+    fontSize: 10,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: 'Nunito-Bold',
   },
 });

@@ -24,10 +24,11 @@ import {
 export interface CaptureOverlayProps {
   visible: boolean;
   duration: number;
+  onStop: () => void;
   onCancel: () => void;
 }
 
-export function CaptureOverlay({ visible, duration, onCancel }: CaptureOverlayProps) {
+export function CaptureOverlay({ visible, duration, onStop, onCancel }: CaptureOverlayProps) {
   // Animation values
   const slideAnim = useRef(new Animated.Value(300)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -114,19 +115,38 @@ export function CaptureOverlay({ visible, duration, onCancel }: CaptureOverlayPr
           {/* Recording label */}
           <Text style={styles.recordingLabel}>Recording...</Text>
 
-          {/* Cancel button */}
-          <Pressable
-            onPress={onCancel}
-            style={({ pressed }) => [
-              styles.cancelButton,
-              pressed && styles.cancelButtonPressed,
-            ]}
-            accessibilityLabel="Cancel recording"
-            accessibilityRole="button"
-            accessibilityHint="Tap to cancel and discard the current recording"
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </Pressable>
+          {/* Action buttons */}
+          <View style={styles.buttonContainer}>
+            {/* Stop button */}
+            <Pressable
+              onPress={onStop}
+              style={({ pressed }) => [
+                styles.stopButton,
+                pressed && styles.stopButtonPressed,
+              ]}
+              accessibilityLabel="Stop recording"
+              accessibilityRole="button"
+              accessibilityHint="Tap to stop and process the recording"
+            >
+              <Ionicons name="stop-circle" size={24} color="#FFFFFF" />
+              <Text style={styles.stopButtonText}>Stop</Text>
+            </Pressable>
+
+            {/* Cancel button */}
+            <Pressable
+              onPress={onCancel}
+              style={({ pressed }) => [
+                styles.cancelButton,
+                pressed && styles.cancelButtonPressed,
+              ]}
+              accessibilityLabel="Cancel recording"
+              accessibilityRole="button"
+              accessibilityHint="Tap to cancel and discard the current recording"
+            >
+              <Ionicons name="close-circle" size={24} color="#FFFFFF" />
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -168,23 +188,52 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 8,
     fontVariant: ['tabular-nums'], // Monospaced numbers for stable width
+    fontFamily: 'Nunito-Light',
   },
   recordingLabel: {
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 48,
+    fontFamily: 'Nunito-Regular',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  stopButton: {
+    minWidth: 100,
+    minHeight: 44,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 22,
+    backgroundColor: '#34C759',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  stopButtonPressed: {
+    backgroundColor: '#2FB350',
+  },
+  stopButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    fontFamily: 'Nunito-SemiBold',
   },
   cancelButton: {
-    minWidth: 120,
-    minHeight: 44, // Minimum touch target size
-    paddingHorizontal: 32,
+    minWidth: 100,
+    minHeight: 44,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   cancelButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -193,5 +242,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
+    fontFamily: 'Nunito-SemiBold',
   },
 });

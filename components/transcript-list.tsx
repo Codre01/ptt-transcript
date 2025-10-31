@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: 'Nunito-Regular',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -117,9 +118,11 @@ const styles = StyleSheet.create({
     color: '#000000',
     lineHeight: 22,
     marginBottom: 8,
+    fontFamily: 'Nunito-Regular',
   },
   timestamp: {
     fontSize: 13,
     color: '#8E8E93',
+    fontFamily: 'Nunito-Regular',
   },
 });

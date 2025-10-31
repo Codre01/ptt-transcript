@@ -10,7 +10,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export interface PTTButtonProps {
   onPressIn: () => void;
@@ -20,43 +20,82 @@ export interface PTTButtonProps {
 }
 
 export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonProps) {
-  // Animation value for pulse effect
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const rippleAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  // Start pulse animation when in listening state
   useEffect(() => {
     if (state === 'listening') {
-      // Create looping pulse animation
+      Animated.parallel([
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseAnim, {
+              toValue: 1.15,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 600,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(rippleAnim, {
+              toValue: 1,
+              duration: 1200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rippleAnim, {
+              toValue: 0,
+              duration: 0,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+      ]).start();
+    } else if (state === 'processing') {
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.2,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        })
       ).start();
     } else {
-      // Stop animation and reset
       pulseAnim.stopAnimation();
+      rippleAnim.stopAnimation();
+      rotateAnim.stopAnimation();
       pulseAnim.setValue(1);
+      rippleAnim.setValue(0);
+      rotateAnim.setValue(0);
     }
-  }, [state, pulseAnim]);
+  }, [state]);
 
-  // Handle press in with haptic feedback
   const handlePressIn = () => {
     if (!disabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Animated.spring(scaleAnim, {
+        toValue: 0.92,
+        useNativeDriver: true,
+        tension: 100,
+      }).start();
       onPressIn();
     }
   };
 
-  // Determine button style based on state
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 100,
+    }).start();
+    onPressOut();
+  };
+
   const getButtonStyle = () => {
     switch (state) {
       case 'listening':
@@ -68,41 +107,87 @@ export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonP
     }
   };
 
-  // Determine icon color based on state
-  const getIconColor = () => {
-    return '#FFFFFF'; // White for all states
+  const getLabel = () => {
+    switch (state) {
+      case 'listening':
+        return 'Recording...';
+      case 'processing':
+        return 'Processing...';
+      default:
+        return 'Hold to Talk';
+    }
   };
+
+  const rippleScale = rippleAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.8],
+  });
+
+  const rippleOpacity = rippleAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.6, 0.3, 0],
+  });
+
+  const rotation = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
     <View style={styles.container}>
+      {state === 'listening' && (
+        <Animated.View
+          style={[
+            styles.ripple,
+            {
+              transform: [{ scale: rippleScale }],
+              opacity: rippleOpacity,
+            },
+          ]}
+        />
+      )}
       <Animated.View
         style={[
-          styles.animatedContainer,
-          state === 'listening' && {
-            transform: [{ scale: pulseAnim }],
+          styles.buttonWrapper,
+          {
+            transform: [
+              { scale: Animated.multiply(scaleAnim, pulseAnim) },
+            ],
           },
         ]}
       >
         <Pressable
           onPressIn={handlePressIn}
-          onPressOut={onPressOut}
+          onPressOut={handlePressOut}
           disabled={disabled}
-          style={({ pressed }) => [
-            styles.button,
-            getButtonStyle(),
-            pressed && !disabled && styles.buttonPressed,
-          ]}
+          style={[styles.button, getButtonStyle()]}
           accessibilityLabel="Press and hold to record"
           accessibilityRole="button"
           accessibilityHint="Hold down to record audio, release to process"
         >
-          <Ionicons
-            name="mic"
-            size={32}
-            color={getIconColor()}
-          />
+          <View style={styles.iconContainer}>
+            {state === 'processing' ? (
+              <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+                <Ionicons name="sync" size={36} color="#FFFFFF" />
+              </Animated.View>
+            ) : (
+              <Ionicons
+                name={state === 'listening' ? 'mic' : 'mic-outline'}
+                size={36}
+                color="#FFFFFF"
+              />
+            )}
+          </View>
+          {state === 'listening' && (
+            <View style={styles.recordingIndicator}>
+              <View style={styles.recordingDot} />
+            </View>
+          )}
         </Pressable>
       </Animated.View>
+      <Text style={[styles.label, state === 'listening' && styles.labelActive]}>
+        {getLabel()}
+      </Text>
     </View>
   );
 }
@@ -111,37 +196,70 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 20,
   },
-  animatedContainer: {
+  buttonWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   button: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   buttonIdle: {
-    backgroundColor: '#007AFF', // iOS blue
+    backgroundColor: '#007AFF',
   },
   buttonListening: {
-    backgroundColor: '#FF3B30', // iOS red
+    backgroundColor: '#FF3B30',
   },
   buttonProcessing: {
-    backgroundColor: '#8E8E93', // iOS gray
-    opacity: 0.6,
+    backgroundColor: '#5856D6',
   },
-  buttonPressed: {
-    opacity: 0.8,
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ripple: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#FF3B30',
+  },
+  recordingIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+  },
+  label: {
+    marginTop: 16,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#8E8E93',
+    letterSpacing: 0.3,
+    fontFamily: 'Nunito-SemiBold',
+  },
+  labelActive: {
+    color: '#FF3B30',
   },
 });

@@ -147,5 +147,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#78350F', // Amber-900 for high contrast text
     lineHeight: 22,
+    fontFamily: 'Nunito-Medium',
   },
 });
