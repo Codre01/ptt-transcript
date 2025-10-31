@@ -1,12 +1,3 @@
-/**
- * Logging Utility
- * 
- * Centralized logging for development and debugging.
- * Provides structured logging with context and timestamps.
- * 
- * In production, these logs could be sent to a logging service.
- */
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
@@ -20,9 +11,6 @@ class Logger {
     this.isDevelopment = __DEV__;
   }
 
-  /**
-   * Format log message with timestamp and context
-   */
   private formatMessage(
     level: LogLevel,
     message: string,

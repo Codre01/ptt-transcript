@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "This app needs access to your microphone to record voice input."
-      }
+      },
+      "bundleIdentifier": "com.codre.ptttranscript"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,8 +25,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "RECORD_AUDIO",
         "RECORD_AUDIO"
-      ]
+      ],
+      "package": "com.codre.ptttranscript"
     },
     "web": {
       "output": "static",

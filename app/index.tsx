@@ -28,11 +28,11 @@ import {
   Platform,
   Pressable,
   Linking as RNLinking,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const {
@@ -89,7 +89,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Scenario Selector at top */}
       <ScenarioSelector
         currentScenario={currentScenario}
