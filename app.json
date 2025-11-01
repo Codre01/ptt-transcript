@@ -8,6 +8,11 @@
     "scheme": "ptttranscript",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "eas": {
+        "projectId": "com.codre.ptttranscript"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
