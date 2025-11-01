@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ptt-transcript",
-    "slug": "ptt-transcript",
+    "slug": "comcodreptttranscript",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,8 +10,9 @@
     "newArchEnabled": true,
     "extra": {
       "eas": {
-        "projectId": "com.codre.ptttranscript"
-      }
+        "projectId": "2b0ebf1a-1988-4bc4-a8de-4c75b72c96f6"
+      },
+      "router": {}
     },
     "ios": {
       "supportsTablet": true,
@@ -58,6 +59,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "codre"
   }
 }
