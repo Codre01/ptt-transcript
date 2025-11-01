@@ -14,6 +14,7 @@ import type { Transcript } from '../store/voice-store';
 
 export interface TranscriptListProps {
   transcripts: Transcript[];
+  isRecording?: boolean;
 }
 
 /**
@@ -52,7 +53,7 @@ function formatDuration(ms: number): string {
 /**
  * Individual transcript card component (memoized for performance)
  */
-const TranscriptCard = React.memo(({ transcript }: { transcript: Transcript }) => {
+const TranscriptCard = React.memo(({ transcript, isRecording }: { transcript: Transcript; isRecording: boolean }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -64,8 +65,18 @@ const TranscriptCard = React.memo(({ transcript }: { transcript: Transcript }) =
     };
   }, []);
 
+  useEffect(() => {
+    // Stop playback when recording starts
+    if (isRecording && isPlaying) {
+      AudioService.stopAudio().then(() => {
+        setIsPlaying(false);
+        setPosition(0);
+      }).catch(console.error);
+    }
+  }, [isRecording, isPlaying]);
+
   const handlePlayPause = async () => {
-    if (!transcript.audioUri) return;
+    if (!transcript.audioUri || isRecording) return;
 
     try {
       if (isPlaying) {
@@ -108,13 +119,14 @@ const TranscriptCard = React.memo(({ transcript }: { transcript: Transcript }) =
         <View style={styles.audioControls}>
           <TouchableOpacity
             onPress={handlePlayPause}
-            style={styles.playButton}
+            style={[styles.playButton, isRecording && styles.playButtonDisabled]}
+            disabled={isRecording}
             accessibilityLabel={isPlaying ? 'Pause audio' : 'Play audio'}
           >
             <Ionicons
               name={isPlaying ? 'pause' : 'play'}
               size={20}
-              color="#007AFF"
+              color={isRecording ? '#C7C7CC' : '#007AFF'}
             />
           </TouchableOpacity>
           <Text style={styles.audioTimer}>
@@ -132,7 +144,7 @@ TranscriptCard.displayName = 'TranscriptCard';
 /**
  * TranscriptList Component
  */
-export function TranscriptList({ transcripts }: TranscriptListProps) {
+export function TranscriptList({ transcripts, isRecording = false }: TranscriptListProps) {
   // Show empty state if no transcripts
   if (transcripts.length === 0) {
     return (
@@ -151,7 +163,7 @@ export function TranscriptList({ transcripts }: TranscriptListProps) {
       showsVerticalScrollIndicator={true}
     >
       {transcripts.map((transcript) => (
-        <TranscriptCard key={transcript.id} transcript={transcript} />
+        <TranscriptCard key={transcript.id} transcript={transcript} isRecording={isRecording} />
       ))}
     </ScrollView>
   );
@@ -217,6 +229,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  playButtonDisabled: {
+    opacity: 0.5,
   },
   audioTimer: {
     fontSize: 14,

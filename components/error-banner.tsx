@@ -14,11 +14,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 export interface ErrorBannerProps {
@@ -26,9 +26,10 @@ export interface ErrorBannerProps {
   type: 'network' | 'server';
   visible: boolean;
   onDismiss: () => void;
+  onRetry?: () => void;
 }
 
-export function ErrorBanner({ message, type, visible, onDismiss }: ErrorBannerProps) {
+export function ErrorBanner({ message, type, visible, onDismiss, onRetry }: ErrorBannerProps) {
   // Animation values for slide-in effect
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -37,7 +38,7 @@ export function ErrorBanner({ message, type, visible, onDismiss }: ErrorBannerPr
   const [shouldRender, setShouldRender] = React.useState(visible);
 
   // Auto-dismiss timer ref
-  const autoDismissTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoDismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Animate banner appearance/disappearance and handle auto-dismiss
   useEffect(() => {
@@ -131,6 +132,26 @@ export function ErrorBanner({ message, type, visible, onDismiss }: ErrorBannerPr
           <Text style={styles.errorText}>{message}</Text>
         </View>
 
+        {/* Retry button (only for network errors) */}
+        {onRetry && (
+          <Pressable
+            onPress={onRetry}
+            style={({ pressed }) => [
+              styles.retryButton,
+              pressed && styles.retryButtonPressed,
+            ]}
+            accessibilityLabel="Retry sending"
+            accessibilityRole="button"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="refresh"
+              size={20}
+              color="#FFFFFF"
+            />
+          </Pressable>
+        )}
+
         {/* Dismiss button */}
         <Pressable
           onPress={onDismiss}
@@ -191,6 +212,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 20,
     fontFamily: 'Nunito-Medium',
+  },
+  retryButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: 8,
+  },
+  retryButtonPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   dismissButton: {
     width: 28,

@@ -11,7 +11,6 @@
  * - PermissionDeniedModal: Permission request UI
  */
 
-import { CaptureOverlay } from '@/components/capture-overlay';
 import { ClarificationBanner } from '@/components/clarification-banner';
 import { ErrorBanner } from '@/components/error-banner';
 import { PTTButton } from '@/components/ptt-button';
@@ -42,10 +41,12 @@ export default function HomeScreen() {
     currentScenario,
     startRecording,
     stopRecording,
+    saveRecording,
     cancelRecording,
     dismissError,
     dismissPermissionDenied,
     retryPermission,
+    retrySendRecording,
     setScenario,
   } = useVoiceStore();
 
@@ -107,8 +108,9 @@ export default function HomeScreen() {
   }, [state.status]);
 
   // Determine PTT button state
-  const getPTTButtonState = (): 'idle' | 'listening' | 'processing' => {
+  const getPTTButtonState = (): 'idle' | 'listening' | 'processing' | 'recorded' => {
     if (state.status === 'listening') return 'listening';
+    if (state.status === 'recorded') return 'recorded';
     if (state.status === 'processing') return 'processing';
     return 'idle';
   };
@@ -142,7 +144,10 @@ export default function HomeScreen() {
 
       {/* Main content area with transcript list */}
       <View style={styles.contentArea}>
-        <TranscriptList transcripts={transcripts} />
+        <TranscriptList 
+          transcripts={transcripts} 
+          isRecording={state.status === 'listening' || state.status === 'recorded'} 
+        />
       </View>
 
       {/* Bottom section with clarification banner and PTT button */}
@@ -158,15 +163,14 @@ export default function HomeScreen() {
         {/* PTT Button */}
         <View style={styles.pttButtonContainer}>
           <PTTButton
-            onPress={() => {
-              if (state.status === 'listening') {
-                stopRecording();
-              } else {
-                startRecording();
-              }
-            }}
+            onPressIn={startRecording}
+            onPressOut={stopRecording}
+            onSave={saveRecording}
+            onCancel={cancelRecording}
             disabled={isPTTButtonDisabled()}
             state={getPTTButtonState()}
+            duration={state.status === 'listening' || state.status === 'recorded' ? state.duration : 0}
+            audioUri={state.status === 'recorded' ? state.audioUri : undefined}
           />
         </View>
       </View>
@@ -178,16 +182,9 @@ export default function HomeScreen() {
           type={state.errorType}
           visible={true}
           onDismiss={dismissError}
+          onRetry={state.audioUri ? retrySendRecording : undefined}
         />
       )}
-
-      {/* Capture Overlay Modal */}
-      <CaptureOverlay
-        visible={state.status === 'listening'}
-        duration={state.status === 'listening' ? state.duration : 0}
-        onStop={stopRecording}
-        onCancel={cancelRecording}
-      />
 
       {/* Permission Denied Modal */}
       <Modal
@@ -282,7 +279,8 @@ const styles = StyleSheet.create({
   },
   pttButtonContainer: {
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingBottom: 16,
+    paddingTop: 5,
   },
   // Permission Modal Styles
   modalBackdrop: {

@@ -12,7 +12,7 @@ class Logger {
     this.isDevelopment = __DEV__;
   }
 
-  private formatMessage(
+  public formatMessage(
     level: LogLevel,
     message: string,
     context?: LogContext
