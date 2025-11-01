@@ -133,6 +133,7 @@ export class StubVoiceApi implements VoiceApi {
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Running the App](#running-the-app)
+- [Building with EAS](#building-with-eas)
 - [Architecture Overview](#architecture-overview)
 - [Scenario Switching](#scenario-switching)
 - [Audio File Lifecycle](#audio-file-lifecycle)
@@ -266,6 +267,64 @@ npx expo run:android
 3. Scan the QR code from Expo DevTools with:
    - iOS: Camera app
    - Android: Expo Go app
+
+---
+
+## Building with EAS
+
+This project is configured for **EAS (Expo Application Services)** builds. EAS allows you to build production-ready apps in the cloud without needing Xcode or Android Studio locally.
+
+### Quick Start
+
+1. **Login to EAS**:
+   ```bash
+   eas login
+   ```
+
+2. **Configure Project** (first time only):
+   ```bash
+   eas build:configure
+   ```
+   This generates a project ID and links your app to your Expo account.
+
+3. **Build for Development**:
+   ```bash
+   # iOS Simulator
+   npm run build:dev:ios
+   
+   # Android APK
+   npm run build:dev:android
+   ```
+
+4. **Build for Production**:
+   ```bash
+   # iOS App Store
+   npm run build:prod:ios
+   
+   # Google Play Store
+   npm run build:prod:android
+   
+   # Both platforms
+   npm run build:all
+   ```
+
+### Build Profiles
+
+- **development**: Simulator/emulator builds for testing
+- **preview**: Internal testing on physical devices
+- **production**: App store submission builds
+
+### What You Need
+
+- **Free Tier**: 30 builds/month (sufficient for this project)
+- **iOS Production**: Apple Developer account ($99/year)
+- **Android Production**: Google Play Console ($25 one-time)
+
+### Detailed Guide
+
+For complete EAS setup instructions, credentials management, and troubleshooting, see:
+
+📖 **[EAS_SETUP.md](./EAS_SETUP.md)**
 
 ---
 
