@@ -31,6 +31,7 @@ export interface Transcript {
   id: string;
   text: string;
   timestamp: string;
+  audioUri?: string;
 }
 
 /**
@@ -63,7 +64,7 @@ const voiceApi = new StubVoiceApi({ delay: 1000 });
 let clarificationContext: { clarificationId: string; previousPrompt: string } | null = null;
 
 // Duration update interval
-let durationInterval: NodeJS.Timeout | null = null;
+let durationInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
  * Generate UUID for transcript IDs
@@ -182,6 +183,8 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       return;
     }
     
+    let audioUri: string | null = null;
+    
     try {
       // Clear duration interval
       if (durationInterval) {
@@ -192,6 +195,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       // Stop recording and get audio file
       logger.info('Stopping audio recording');
       const recording = await AudioService.stopRecording();
+      audioUri = recording.uri;
       logger.debug('Recording stopped', {
         uri: recording.uri,
         duration: recording.duration,
@@ -223,16 +227,6 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       const apiDuration = Date.now() - apiStartTime;
       logger.performance('Voice API processing', apiDuration);
 
-      // Delete the audio file after processing
-      try {
-        logger.debug('Deleting audio file', { uri: recording.uri });
-        await AudioService.deleteFile(recording.uri);
-        logger.debug('Audio file deleted successfully');
-      } catch (deleteError) {
-        logger.error('Error deleting audio file', deleteError, { uri: recording.uri });
-        // Continue even if deletion fails
-      }
-
       // Handle result based on kind
       if (result.kind === 'ok') {
         // Success - add transcript and show result
@@ -243,6 +237,7 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
           id: generateUUID(),
           text: result.transcript,
           timestamp: new Date().toISOString(),
+          audioUri: recording.uri, // Keep audio file for playback
         };
 
         set((state) => ({
@@ -302,6 +297,15 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       if (durationInterval) {
         clearInterval(durationInterval);
         durationInterval = null;
+      }
+
+      // Delete audio file on error
+      if (audioUri) {
+        try {
+          await AudioService.deleteFile(audioUri);
+        } catch (deleteError) {
+          logger.error('Error deleting audio file after error', deleteError);
+        }
       }
 
       // Determine error type and message

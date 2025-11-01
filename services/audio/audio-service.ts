@@ -1,5 +1,5 @@
 import { logger } from '@/utils/logger';
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Directory, File, Paths } from 'expo-file-system';
 import type { AudioRecording, PermissionState } from './types';
 
@@ -8,6 +8,8 @@ class AudioServiceImpl {
     private recordingDuration: number = 0;
     private durationInterval: ReturnType<typeof setInterval> | null = null;
     private recordingsDir: Directory;
+    private sound: Audio.Sound | null = null;
+    private playbackCallback: ((status: AVPlaybackStatus) => void) | null = null;
 
     constructor() {
         this.recordingsDir = new Directory(Paths.cache, 'recordings');
@@ -382,6 +384,87 @@ class AudioServiceImpl {
      */
     getRecordingDuration(): number {
         return this.recordingDuration;
+    }
+
+    /**
+     * Play audio file
+     */
+    async playAudio(uri: string, onStatusUpdate?: (status: AVPlaybackStatus) => void): Promise<void> {
+        try {
+            // Stop any existing playback
+            if (this.sound) {
+                await this.sound.unloadAsync();
+                this.sound = null;
+            }
+
+            // Set audio mode for playback
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+            });
+
+            // Create and load sound
+            const { sound } = await Audio.Sound.createAsync(
+                { uri },
+                { shouldPlay: true },
+                onStatusUpdate
+            );
+
+            this.sound = sound;
+            this.playbackCallback = onStatusUpdate || null;
+            logger.info('Audio playback started', { uri });
+        } catch (error) {
+            logger.error('Error playing audio', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Pause audio playback
+     */
+    async pauseAudio(): Promise<void> {
+        try {
+            if (this.sound) {
+                await this.sound.pauseAsync();
+                logger.debug('Audio playback paused');
+            }
+        } catch (error) {
+            logger.error('Error pausing audio', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resume audio playback
+     */
+    async resumeAudio(): Promise<void> {
+        try {
+            if (this.sound) {
+                await this.sound.playAsync();
+                logger.debug('Audio playback resumed');
+            }
+        } catch (error) {
+            logger.error('Error resuming audio', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Stop audio playback
+     */
+    async stopAudio(): Promise<void> {
+        try {
+            if (this.sound) {
+                await this.sound.stopAsync();
+                await this.sound.unloadAsync();
+                this.sound = null;
+                this.playbackCallback = null;
+                logger.debug('Audio playback stopped');
+            }
+        } catch (error) {
+            logger.error('Error stopping audio', error);
+            throw error;
+        }
     }
 }
 

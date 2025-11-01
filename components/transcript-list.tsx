@@ -5,8 +5,11 @@
  * Shows most recent transcripts at the top with relative time formatting.
  */
 
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { AVPlaybackStatus } from 'expo-av';
+import { AudioService } from '../services/audio';
 import type { Transcript } from '../store/voice-store';
 
 export interface TranscriptListProps {
@@ -37,12 +40,88 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 /**
+ * Format duration in milliseconds to MM:SS
+ */
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
  * Individual transcript card component (memoized for performance)
  */
 const TranscriptCard = React.memo(({ transcript }: { transcript: Transcript }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      AudioService.stopAudio();
+    };
+  }, []);
+
+  const handlePlayPause = async () => {
+    if (!transcript.audioUri) return;
+
+    try {
+      if (isPlaying) {
+        await AudioService.pauseAudio();
+        setIsPlaying(false);
+      } else {
+        if (position === 0 || position >= duration) {
+          // Start from beginning
+          await AudioService.playAudio(transcript.audioUri, (status: AVPlaybackStatus) => {
+            if (status.isLoaded) {
+              setPosition(status.positionMillis);
+              setDuration(status.durationMillis || 0);
+              setIsPlaying(status.isPlaying);
+              
+              // Auto-stop when finished
+              if (status.didJustFinish) {
+                setIsPlaying(false);
+                setPosition(0);
+              }
+            }
+          });
+        } else {
+          // Resume
+          await AudioService.resumeAudio();
+        }
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsPlaying(false);
+    }
+  };
+
   return (
     <View style={styles.card}>
-      <Text style={styles.transcriptText}>{transcript.text}</Text>
+      <View style={styles.cardHeader}>
+        <Text style={styles.transcriptText}>{transcript.text}</Text>
+      </View>
+      {transcript.audioUri && (
+        <View style={styles.audioControls}>
+          <TouchableOpacity
+            onPress={handlePlayPause}
+            style={styles.playButton}
+            accessibilityLabel={isPlaying ? 'Pause audio' : 'Play audio'}
+          >
+            <Ionicons
+              name={isPlaying ? 'pause' : 'play'}
+              size={20}
+              color="#007AFF"
+            />
+          </TouchableOpacity>
+          <Text style={styles.audioTimer}>
+            {formatDuration(position)} / {formatDuration(duration)}
+          </Text>
+        </View>
+      )}
       <Text style={styles.timestamp}>{formatRelativeTime(transcript.timestamp)}</Text>
     </View>
   );
@@ -113,11 +192,35 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  cardHeader: {
+    marginBottom: 8,
+  },
   transcriptText: {
     fontSize: 16,
     color: '#000000',
     lineHeight: 22,
+    fontFamily: 'Nunito-Regular',
+  },
+  audioControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  playButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F0F0F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  audioTimer: {
+    fontSize: 14,
+    color: '#8E8E93',
     fontFamily: 'Nunito-Regular',
   },
   timestamp: {

@@ -8,8 +8,8 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = false;
-    // this.isDevelopment = __DEV__;
+    // this.isDevelopment = false;
+    this.isDevelopment = __DEV__;
   }
 
   private formatMessage(

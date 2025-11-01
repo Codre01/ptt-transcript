@@ -158,8 +158,13 @@ export default function HomeScreen() {
         {/* PTT Button */}
         <View style={styles.pttButtonContainer}>
           <PTTButton
-            onPressIn={startRecording}
-            onPressOut={stopRecording}
+            onPress={() => {
+              if (state.status === 'listening') {
+                stopRecording();
+              } else {
+                startRecording();
+              }
+            }}
             disabled={isPTTButtonDisabled()}
             state={getPTTButtonState()}
           />
@@ -291,6 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
+    paddingBottom: 40,
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
@@ -314,10 +320,11 @@ const styles = StyleSheet.create({
   },
   permissionTitle: {
     fontSize: 20,
-    fontWeight: '700',
     color: '#1F2937', // Gray-800
     textAlign: 'center',
     marginBottom: 12,
+    fontWeight: '600',
+    fontFamily: 'Nunito-Bold',
   },
   permissionMessage: {
     fontSize: 15,
@@ -325,9 +332,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
+    fontFamily: 'Nunito-Regular',
   },
   permissionButtons: {
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
     gap: 12,
   },
   permissionButton: {
@@ -354,16 +364,19 @@ const styles = StyleSheet.create({
   permissionButtonTextPrimary: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1F2937',
+    fontFamily: 'Nunito-SemiBold',
   },
   permissionButtonTextSecondary: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1F2937', // Gray-800
+    fontFamily: 'Nunito-SemiBold',
   },
   permissionButtonTextTertiary: {
     fontSize: 16,
     fontWeight: '500',
     color: '#6B7280', // Gray-500
+    fontFamily: 'Nunito-SemiBold',
   },
 });

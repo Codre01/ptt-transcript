@@ -13,13 +13,12 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export interface PTTButtonProps {
-  onPressIn: () => void;
-  onPressOut: () => void;
+  onPress: () => void;
   disabled: boolean;
   state: 'idle' | 'listening' | 'processing';
 }
 
-export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonProps) {
+export function PTTButton({ onPress, disabled, state }: PTTButtonProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rippleAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -75,7 +74,7 @@ export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonP
     }
   }, [state]);
 
-  const handlePressIn = () => {
+  const handlePress = () => {
     if (!disabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Animated.spring(scaleAnim, {
@@ -83,18 +82,18 @@ export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonP
         useNativeDriver: true,
         tension: 100,
       }).start();
-      onPressIn();
+      onPress();
     }
   };
 
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 100,
-    }).start();
-    onPressOut();
-  };
+  // const handlePressOut = () => {
+  //   Animated.spring(scaleAnim, {
+  //     toValue: 1,
+  //     useNativeDriver: true,
+  //     tension: 100,
+  //   }).start();
+  //   onPressOut();
+  // };
 
   const getButtonStyle = () => {
     switch (state) {
@@ -157,8 +156,7 @@ export function PTTButton({ onPressIn, onPressOut, disabled, state }: PTTButtonP
         ]}
       >
         <Pressable
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
+          onPressIn={handlePress}
           disabled={disabled}
           style={[styles.button, getButtonStyle()]}
           accessibilityLabel="Press and hold to record"

@@ -13,12 +13,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
-    Animated,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export interface CaptureOverlayProps {
@@ -38,7 +38,7 @@ export function CaptureOverlay({ visible, duration, onStop, onCancel }: CaptureO
     if (visible) {
       // Reset position
       slideAnim.setValue(300);
-      
+
       // Animate slide up
       Animated.spring(slideAnim, {
         toValue: 0,
@@ -117,35 +117,31 @@ export function CaptureOverlay({ visible, duration, onStop, onCancel }: CaptureO
 
           {/* Action buttons */}
           <View style={styles.buttonContainer}>
-            {/* Stop button */}
-            <Pressable
+            {/* Stop button - Primary action */}
+            <TouchableOpacity
               onPress={onStop}
-              style={({ pressed }) => [
-                styles.stopButton,
-                pressed && styles.stopButtonPressed,
-              ]}
+              style={styles.stopButton}
+              activeOpacity={0.7}
               accessibilityLabel="Stop recording"
               accessibilityRole="button"
               accessibilityHint="Tap to stop and process the recording"
             >
               <Ionicons name="stop-circle" size={24} color="#FFFFFF" />
               <Text style={styles.stopButtonText}>Stop</Text>
-            </Pressable>
+            </TouchableOpacity>
 
-            {/* Cancel button */}
-            <Pressable
+            {/* Cancel button - Secondary action */}
+            <TouchableOpacity
               onPress={onCancel}
-              style={({ pressed }) => [
-                styles.cancelButton,
-                pressed && styles.cancelButtonPressed,
-              ]}
+              style={styles.cancelButton}
+              activeOpacity={0.7}
               accessibilityLabel="Cancel recording"
               accessibilityRole="button"
               accessibilityHint="Tap to cancel and discard the current recording"
             >
               <Ionicons name="close-circle" size={24} color="#FFFFFF" />
               <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </View>
@@ -203,45 +199,44 @@ const styles = StyleSheet.create({
   stopButton: {
     minWidth: 100,
     minHeight: 44,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 22,
-    backgroundColor: '#34C759',
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 28,
+    backgroundColor: '#34C759', // iOS green for primary action
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  stopButtonPressed: {
-    backgroundColor: '#2FB350',
-  },
+
   stopButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 18,
     color: '#FFFFFF',
-    fontFamily: 'Nunito-SemiBold',
+    fontFamily: 'Nunito-Bold',
   },
   cancelButton: {
     minWidth: 100,
     minHeight: 44,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  cancelButtonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
+
   cancelButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 18,
     color: '#FFFFFF',
-    fontFamily: 'Nunito-SemiBold',
+    fontFamily: 'Nunito-Bold',
   },
 });
