@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: {
-    fontSize: 15,
+    fontSize: 18,
     color: '#1C1C1E',
     letterSpacing: -0.3,
     fontFamily: 'Nunito-Bold',

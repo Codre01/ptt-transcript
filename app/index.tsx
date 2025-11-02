@@ -7,7 +7,6 @@
  * - ClarificationBanner: Clarification prompts (above PTT button)
  * - PTTButton: Press-to-talk recording button (bottom center)
  * - ErrorBanner: Error messages (overlay at top)
- * - CaptureOverlay: Recording modal (full screen overlay)
  * - PermissionDeniedModal: Permission request UI
  */
 
