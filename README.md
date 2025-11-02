@@ -21,7 +21,7 @@ Before running this application, ensure you have the following installed:
 
 ### Required Software
 
-- **Node.js** (v18 or higher)
+- **Node.js** (v22 or higher)
   - Download from [nodejs.org](https://nodejs.org/)
   - Verify installation: `node --version`
 
