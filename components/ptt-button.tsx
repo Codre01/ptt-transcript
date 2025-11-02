@@ -346,6 +346,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 0,
+    paddingBottom: 20,
   },
   buttonWrapper: {
     alignItems: 'center',
